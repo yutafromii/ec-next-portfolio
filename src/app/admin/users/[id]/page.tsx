@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import { User } from "@/app/interfaces/User";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Next.js 15 + React 19: params/searchParams are Promises
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function getUser(id: string): Promise<User | null> {
@@ -25,7 +26,8 @@ async function getUser(id: string): Promise<User | null> {
 }
 
 export default async function UserDetailPage({ params }: Props) {
-  const user = await getUser(params.id);
+  const { id } = await params;
+  const user = await getUser(id);
 
   if (!user) {
     return notFound();

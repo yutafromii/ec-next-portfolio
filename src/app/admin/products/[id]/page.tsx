@@ -9,7 +9,7 @@ import { useFetchData } from "@/app/lib/hooks/useFetchData";
 import { useEffect, useState } from "react";
 import { Product } from "@/app/interfaces/Product";
 import { useCartStore } from "@/app/stores/cartStore";
-import { addOrUpdateCartItem } from "@/app/lib/api/cart";
+import { CartAPI } from "@/app/lib/api/carts";
 import { useUserStore } from "@/app/stores/userStore";
 
 export default function ProductDetailPage() {
@@ -55,7 +55,7 @@ const handleAddToCart = async () => {
     return null;
   }
   try {
-    await addOrUpdateCartItem({
+    await CartAPI.add({
       productId: product.id,
       quantity: quantity,
     });
