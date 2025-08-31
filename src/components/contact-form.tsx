@@ -39,12 +39,8 @@ export default function ContactForm() {
 
     try {
       setSubmitting(true);
-      const res = await fetch("/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error(`送信に失敗しました (${res.status})`);
+      // 今回は見た目のみのため、通信は行わずに成功メッセージを表示
+      await new Promise((r) => setTimeout(r, 500));
       setSuccess("お問い合わせを受け付けました。ありがとうございます。");
       setForm({ name: "", email: "", subject: "", message: "" });
     } catch (e: unknown) {
@@ -92,4 +88,3 @@ export default function ContactForm() {
     </Card>
   );
 }
-
