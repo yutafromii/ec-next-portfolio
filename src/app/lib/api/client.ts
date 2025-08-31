@@ -7,13 +7,12 @@ export type ApiEnvelope<T> = {
   data: T;
 };
 
+function isObjectRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
 function isApiEnvelope<T = unknown>(v: unknown): v is ApiEnvelope<T> {
-  return !!(
-    v &&
-    typeof v === "object" &&
-    "success" in (v as any) &&
-    "data" in (v as any)
-  );
+  return isObjectRecord(v) && "success" in v && "data" in v;
 }
 
 export class ApiError extends Error {
