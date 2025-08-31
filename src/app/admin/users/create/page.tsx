@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiPost } from "@/app/lib/api";
+import { http } from "@/app/lib/api/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ export default function CreateUserPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await apiPost("http://localhost:8080/users", formData);
+      await http.post("/users", formData);
       router.push("/admin/users");
     } catch (error) {
       console.error("ユーザー作成失敗", error);

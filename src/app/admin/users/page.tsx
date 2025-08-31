@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiGet } from "@/app/lib/api";
+import { http } from "@/app/lib/api/client";
 import { useRouter } from "next/navigation";
 import { User } from "@/app/interfaces/User";
 import Link from "next/link";
@@ -12,7 +12,7 @@ export default function AdminUserList() {
 
   useEffect(() => {
     (async () => {
-      const res = await apiGet<User[]>("http://localhost:8080/users");
+      const res = await http.get<User[]>("/users");
       setUsers(res);
     })();
   }, []);

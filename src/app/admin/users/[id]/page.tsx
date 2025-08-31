@@ -1,6 +1,7 @@
 // app/admin/users/[id]/page.tsx
 import { notFound } from "next/navigation";
 import { User } from "@/app/interfaces/User";
+import { http } from "@/app/lib/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Next.js 15 + React 19: params/searchParams are Promises
@@ -12,13 +13,7 @@ interface Props {
 
 async function getUser(id: string): Promise<User | null> {
   try {
-    const res = await fetch(`http://localhost:8080/users/${id}`, {
-      cache: "no-store", // SSRで毎回取得
-      credentials: "include",
-    });
-
-    if (!res.ok) return null;
-    return res.json();
+    return await http.get<User>(`/users/${id}`);
   } catch (err) {
     console.error("ユーザー取得エラー:", err);
     return null;

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { apiPost } from "@/app/lib/api";
+import { http } from "@/app/lib/api/client";
 import { useRouter } from "next/navigation"; // ✅ 修正：useRouterを使う
 
 
@@ -56,7 +56,7 @@ export default function ProductCreatePage() {
         
       };
 
-      await apiPost("http://localhost:8080/products", payload);
+      await http.post("/products", payload);
       alert("商品を登録しました！");
       // router.push("/admin/products");
     } catch (err) {

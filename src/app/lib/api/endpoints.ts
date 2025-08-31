@@ -2,6 +2,7 @@
 export const EP = {
   auth: {
     login: () => `/login`,
+    register: () => `/register`,
   },
   products: {
     list: () => `/products`,

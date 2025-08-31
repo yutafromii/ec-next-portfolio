@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiPost } from "@/app/lib/api";
+import { http } from "@/app/lib/api/client";
+import { EP } from "@/app/lib/api/endpoints";
 // import Link from "next/link";
 
 // 型定義
@@ -40,7 +41,7 @@ export function RegisterForm({ className }: React.ComponentProps<"form">) {
     }
 
     try {
-      await apiPost("http://localhost:8080/register", user);
+      await http.post(EP.auth.register?.() ?? "/register", user);
       setSuccess("登録が完了しました。TOPページに移動します。");
       setTimeout(() => router.push("/"), 2000); // 2秒後にログイン画面へ
     } catch (err: unknown) {
