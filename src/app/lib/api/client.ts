@@ -1,5 +1,21 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
+// Backend envelope: { success, message, data }
+export type ApiEnvelope<T> = {
+  success: boolean;
+  message?: string;
+  data: T;
+};
+
+function isApiEnvelope<T = unknown>(v: unknown): v is ApiEnvelope<T> {
+  return !!(
+    v &&
+    typeof v === "object" &&
+    "success" in (v as any) &&
+    "data" in (v as any)
+  );
+}
+
 export class ApiError extends Error {
   status?: number;
   body?: string;
@@ -82,7 +98,10 @@ export async function apiFetch<T = unknown>(
   if (res.status === 204) return undefined as T;
   if (parse === "text") return (await res.text()) as T;
   if (parse === "blob") return (await res.blob()) as T;
-  return (await res.json()) as T;
+  const json = (await res.json()) as unknown;
+  // Unwrap ApiEnvelope<T> transparently
+  if (isApiEnvelope<T>(json)) return json.data as T;
+  return json as T;
 }
 
 // 既存コードの移行を楽にする“薄いシム”
