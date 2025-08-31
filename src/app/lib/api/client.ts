@@ -43,15 +43,25 @@ export async function apiFetch<T = unknown>(
 
   // Avoid sending Content-Type on GET/HEAD to prevent unnecessary CORS preflight
   const baseHeaders: Record<string, string> = {};
-  const hasBody = !!(init as any).body;
+  const hasBody = init.body != null;
+
+  // Normalize header keys safely across HeadersInit variants
+  const headerKeys = (h?: HeadersInit): Set<string> => {
+    if (!h) return new Set();
+    if (h instanceof Headers) return new Set(Array.from(h.keys()).map((k) => k.toLowerCase()));
+    if (Array.isArray(h)) return new Set(h.map(([k]) => String(k).toLowerCase()));
+    return new Set(Object.keys(h as Record<string, unknown>).map((k) => k.toLowerCase()));
+  };
+
   if (hasBody && method !== "GET" && method !== "HEAD") {
-    const provided = init.headers ?? {};
-    const lowerKeys = new Set(
-      Array.isArray(provided)
-        ? provided.map(([k]) => k.toLowerCase())
-        : Object.keys(provided as Record<string, string>).map((k) => k.toLowerCase())
-    );
-    if (!lowerKeys.has("content-type")) {
+    const keys = headerKeys(init.headers);
+    // Avoid forcing JSON for multipart/form-data or other non-JSON bodies
+    const b = init.body as unknown;
+    const isFormData = typeof FormData !== "undefined" && b instanceof FormData;
+    const isURLParams = typeof URLSearchParams !== "undefined" && b instanceof URLSearchParams;
+    const isBlob = typeof Blob !== "undefined" && b instanceof Blob;
+
+    if (!keys.has("content-type") && !isFormData && !isURLParams && !isBlob) {
       baseHeaders["Content-Type"] = "application/json";
     }
   }
