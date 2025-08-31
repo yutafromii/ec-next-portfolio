@@ -39,10 +39,26 @@ export async function apiFetch<T = unknown>(
   { parse = "json", timeoutMs = 15000 }: { parse?: "json" | "text" | "blob"; timeoutMs?: number } = {}
 ): Promise<T> {
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+  const method = (init.method || "GET").toUpperCase();
+
+  // Avoid sending Content-Type on GET/HEAD to prevent unnecessary CORS preflight
+  const baseHeaders: Record<string, string> = {};
+  const hasBody = !!(init as any).body;
+  if (hasBody && method !== "GET" && method !== "HEAD") {
+    const provided = init.headers ?? {};
+    const lowerKeys = new Set(
+      Array.isArray(provided)
+        ? provided.map(([k]) => k.toLowerCase())
+        : Object.keys(provided as Record<string, string>).map((k) => k.toLowerCase())
+    );
+    if (!lowerKeys.has("content-type")) {
+      baseHeaders["Content-Type"] = "application/json";
+    }
+  }
   const res = await withTimeout(
     fetch(url, {
       credentials: "include",
-      headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
+      headers: { ...baseHeaders, ...(init.headers ?? {}) },
       ...init,
     }),
     timeoutMs
