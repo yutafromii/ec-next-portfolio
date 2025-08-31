@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { apiGet, apiPut } from "@/app/lib/api";
+import { http } from "@/app/lib/api/client";
 import { User } from "@/app/interfaces/User";
 
 export default function EditUserPage() {
@@ -21,7 +21,7 @@ export default function EditUserPage() {
 
   useEffect(() => {
     (async () => {
-      const data = await apiGet<User>(`http://localhost:8080/users/${id}`);
+      const data = await http.get<User>(`/users/${id}`);
       setUser(data);
     })();
   }, [id]);
@@ -34,7 +34,7 @@ export default function EditUserPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await apiPut(`http://localhost:8080/users/${id}`, user);
+    await http.put(`/users/${id}`, user);
     setLoading(false);
     router.push("/admin/users");
   };

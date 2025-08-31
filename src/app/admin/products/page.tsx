@@ -5,28 +5,38 @@ import Image from "next/image";
 // import { products } from "@/lib/products";
 import { Product } from "@/app/interfaces/Product";
 import { useEffect, useState } from "react";
-import { apiDelete } from "@/app/lib/api";
-import { useFetchData } from "@/app/lib/hooks/useFetchData";
+import { ProductsAPI } from "@/app/lib/api/products";
 
 export default function ProductListPage() {
-  const { data, error, loading } = useFetchData<Product[]>(
-    "http://localhost:8080/products"
-  );
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 初回だけセット
   useEffect(() => {
-    if (data) {
-      setProducts(data);
-    }
-  }, [data]);
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await ProductsAPI.list();
+        if (!mounted) return;
+        setProducts(list ?? []);
+        setError(null);
+      } catch (e) {
+        if (!mounted) return;
+        setError("商品一覧の取得に失敗しました。");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   // 削除処理（Hook化は不要。動的URLなのでシンプル記述でOK）
   const handleDelete = async (id: number) => {
     const confirmed = window.confirm("本当に削除しますか？");
     if (!confirmed) return;
     try {
-      await apiDelete(`http://localhost:8080/products/${id}`);
+      await ProductsAPI.delete(id);
       setProducts((prev) => prev.filter((product) => product.id !== id));
     } catch (err) {
       console.error(err);

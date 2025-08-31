@@ -13,8 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { apiGet, apiPost } from "@/app/lib/api";
 import { useUserStore } from "@/app/stores/userStore";
+import { http } from "@/app/lib/api/client";
+import { EP } from "@/app/lib/api/endpoints";
+import { CartAPI } from "@/app/lib/api/carts";
 
 interface LoginRequest {
   email: string;
@@ -63,18 +65,13 @@ export function LoginForm({
 
     try {
       // ログインAPI実行 → トークンを受け取る
-      const loginRes = await apiPost<{ token: string }>(
-        "http://localhost:8080/login",
-        loginUser
-      );
+      const loginRes = await http.post<{ token: string }>(EP.auth.login(), loginUser);
 
       // トークン保存
       localStorage.setItem("token", loginRes.token);
 
       // ユーザー情報取得
-      const userData = await apiGet<UserResponse>(
-        "http://localhost:8080/users/me"
-      );
+      const userData = await http.get<UserResponse>(EP.users.me());
 
       // Zustandに保存
       setUser(userData);
@@ -85,7 +82,7 @@ export function LoginForm({
         const parsed = JSON.parse(pending);
         if (parsed.type === "addToCart") {
           try {
-            await apiPost("http://localhost:8080/carts/me", parsed.data);
+            await CartAPI.add(parsed.data);
             localStorage.removeItem("pendingAction");
             router.push("/cart");
             return;

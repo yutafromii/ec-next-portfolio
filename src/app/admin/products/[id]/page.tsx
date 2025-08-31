@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 // import { products } from "@/lib/products";
 import Link from "next/link";
-import { useFetchData } from "@/app/lib/hooks/useFetchData";
+import { ProductsAPI } from "@/app/lib/api/products";
 import { useEffect, useState } from "react";
 import { Product } from "@/app/interfaces/Product";
 import { useCartStore } from "@/app/stores/cartStore";
@@ -15,37 +15,48 @@ import { useUserStore } from "@/app/stores/userStore";
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { data, error, loading } = useFetchData<Product>(
-    `http://localhost:8080/products/${id}`
-  );
   const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const user = useUserStore((state) => state.user);
   const pathname = usePathname();
   useEffect(() => {
-    if (data) {
-      const fallbackProduct: Product & {
-        image: string;
-        subImages: string[];
-        sizeChart: {
-          columns: string[];
-          rows: { label: string; values: (string | number)[] }[];
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await ProductsAPI.byId(Number(id));
+        if (!mounted) return;
+        const fallbackProduct: Product & {
+          image: string;
+          subImages: string[];
+          sizeChart: {
+            columns: string[];
+            rows: { label: string; values: (string | number)[] }[];
+          };
+        } = {
+          ...data,
+          image: data.imageUrls[0] ?? "/fallback.jpg",
+          subImages: data.imageUrls.slice(1) ?? [],
+          sizeChart: {
+            columns: ["Length", "Width"],
+            rows: [
+              { label: "S", values: [60, 45] },
+              { label: "M", values: [65, 50] },
+            ],
+          },
         };
-      } = {
-        ...data,
-        image: data.imageUrls[0] ?? "/fallback.jpg",
-        subImages: data.imageUrls.slice(1) ?? [],
-        sizeChart: {
-          columns: ["Length", "Width"],
-          rows: [
-            { label: "S", values: [60, 45] },
-            { label: "M", values: [65, 50] },
-          ],
-        },
-      };
-      setProduct(fallbackProduct);
-    }
-  }, [data]);
+        setProduct(fallbackProduct);
+        setError(null);
+      } catch (e) {
+        if (!mounted) return;
+        setError("商品情報の取得に失敗しました。");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
   const { addItem } = useCartStore();
 
 const handleAddToCart = async () => {

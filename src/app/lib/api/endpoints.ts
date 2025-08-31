@@ -1,5 +1,8 @@
 // 必要に応じてここを一元管理（将来パスが変わっても差し替え1箇所）
 export const EP = {
+  auth: {
+    login: () => `/login`,
+  },
   products: {
     list: () => `/products`,
     byId: (id: number) => `/products/${id}`,
