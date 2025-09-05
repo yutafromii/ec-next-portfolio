@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/app/stores/cartStore";
+import { useUserStore } from "@/app/stores/userStore";
 import { CartAPI } from "@/app/lib/api/carts";
 
 /**
@@ -10,12 +11,23 @@ import { CartAPI } from "@/app/lib/api/carts";
  */
 export function useEnsureCart() {
   const { items, setItems } = useCartStore();
+  const { user } = useUserStore();
   const [loading, setLoading] = useState(items.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    if (items.length > 0) { setLoading(false); return; }
+    // 未ログイン時はサーバ同期を行わない（ゲストカートを維持）
+    if (!user) {
+      setLoading(false);
+      setError(null);
+      return () => { mounted = false; };
+    }
+
+    if (items.length > 0) {
+      setLoading(false);
+      return () => { mounted = false; };
+    }
 
     (async () => {
       try {
@@ -25,6 +37,8 @@ export function useEnsureCart() {
         setError(null);
       } catch (e) {
         if (!mounted) return;
+        // 認証切れなどのエラー時は空扱い（バッジを出さない）
+        setItems([]);
         setError(e instanceof Error ? e.message : "カートの取得に失敗しました。");
       } finally {
         if (mounted) setLoading(false);
@@ -32,7 +46,7 @@ export function useEnsureCart() {
     })();
 
     return () => { mounted = false; };
-  }, [items.length, setItems]);
+  }, [user, items.length, setItems]);
 
   return { loading, error };
 }

@@ -12,7 +12,7 @@ export default function OrderItemCard({ item, imageUrl }: Props) {
     <div className="flex flex-col gap-4 border-t border-b border-dotted border-gray-300 py-6">
       <div className="flex gap-6">
         <img
-          src={imageUrl || "/images/no-image.png"}
+          src={imageUrl || "/images/no-image.jpg"}
           alt={item.name ?? "product image"}
           className="w-24 h-24 object-contain bg-gray-100"
         />

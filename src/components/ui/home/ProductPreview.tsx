@@ -55,7 +55,7 @@ export default function ProductPreview() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {items.map((p) => {
-            const image = p.imageUrls?.[0] ?? "/images/no-image.png";
+            const image = p.imageUrls?.[0] ?? "/images/no-image.jpg";
             return (
               <Link key={p.id} href={`/products/${p.id}`} className="group text-center">
                 <div className="relative aspect-square bg-[#f7f7f7]">

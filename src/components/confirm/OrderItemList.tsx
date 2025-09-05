@@ -56,7 +56,7 @@ export default function OrderItemList() {
       {items.map((item) => {
         const product = productMap[item.productId];
         const imageUrl =
-          item.imageUrl || product?.imageUrls?.[0] || "/images/no-image.png";
+          item.imageUrl || product?.imageUrls?.[0] || "/images/no-image.jpg";
         return <OrderItemCard key={item.id} item={item} imageUrl={imageUrl} />;
       })}
     </div>

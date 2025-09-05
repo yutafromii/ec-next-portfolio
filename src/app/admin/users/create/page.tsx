@@ -1,103 +1,68 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { http } from "@/app/lib/api/client";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+
+import { AdminUsersAPI } from "@/app/lib/api/adminUsers";
+import { UserForm, UserFormValues } from "@/components/admin/users/UserForm";
 
 export default function CreateUserPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const initial: UserFormValues = {
     name: "",
     email: "",
     phoneNumber: "",
-    address: "",
+    postalCode: "",
+    prefecture: "",
+    city: "",
+    addressLine1: "",
+    addressLine2: "",
     password: "",
     role: "USER",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: UserFormValues) => {
+    setSubmitting(true);
+    setError(null);
     try {
-      await http.post("/users", formData);
+      await AdminUsersAPI.create(values);
       router.push("/admin/users");
-    } catch (error) {
-      console.error("ユーザー作成失敗", error);
-      alert("ユーザー作成に失敗しました");
+    } catch (e) {
+      console.error(e);
+      setError("ユーザー作成に失敗しました。入力内容をご確認ください。");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">ユーザー新規作成</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <section className="py-8 mt-12">
+      <div className="max-w-5xl mx-auto px-6 flex items-center justify-between mb-6">
         <div>
-          <Label>名前</Label>
-          <Input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          <h1 className="text-2xl font-bold">ユーザー新規作成</h1>
+          <p className="text-sm text-gray-500">管理者がユーザーアカウントを登録します。</p>
         </div>
-        <div>
-          <Label>メール</Label>
-          <Input
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+        <div className="flex gap-3">
+          <Link href="/admin/users"><Button variant="outline">キャンセル</Button></Link>
+          <Button form="__noop" disabled>作成して保存</Button>{/* 見た目用（実処理はフォーム内） */}
         </div>
-        <div>
-          <Label>電話番号</Label>
-          <Input
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <Label>住所</Label>
-          <Input
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <Label>パスワード</Label>
-          <Input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <Label>ロール</Label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="border rounded px-2 py-1 w-full"
-          >
-            <option value="USER">USER</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
-        </div>
+      </div>
 
-        <Button type="submit" className="w-full">
-          作成する
-        </Button>
-      </form>
-    </div>
+      <div className="max-w-5xl mx-auto px-6">
+        <UserForm
+          mode="create"
+          initialValues={initial}
+          submitting={submitting}
+          error={error}
+          onSubmit={onSubmit}
+          submitLabel="作成する"
+        />
+      </div>
+    </section>
   );
 }

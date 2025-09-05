@@ -8,6 +8,7 @@ export type OrderItemDto = {
 };
 export type OrderResponse = {
   orderId: number;
+  orderNumber?: string;
   total: number;
   items: OrderItemDto[];
   orderedAt?: string;

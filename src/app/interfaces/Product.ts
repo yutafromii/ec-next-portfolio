@@ -8,6 +8,7 @@ export type Product = Timestamped & {
   name: string;
   description: string;
   fabric?: string;
+  category?: string;    // 追加: カテゴリ（"jacket" | "pants" | "shirt" 等）
   price: Money;          // カタログ上の標準価格
   stock?: number;
   isActive?: boolean;

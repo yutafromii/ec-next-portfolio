@@ -5,16 +5,16 @@ import { Plus, Minus } from "lucide-react";
 
 const newsItems = [
   {
-    title: "INFORMATION",
-    summary: "宅急便コレクトにおけるクレジットカードタッチ決済の導入について",
-    content: "sample text sample text sample text sample text sample text ",
-  },
-  {
     title: "ATTENTION",
     summary: "ご購入制限のご案内",
     content: `WEB STOREではより多くのお客様にご購入いただけるよう、商品に購入個数の制限を設けさせていただいております。
 同一品番の制限数を超えた複数注文等、弊社が転売目的または不正注文と判断した場合は、ご注文内容の変更またはご注文のキャンセルをさせていただく場合がございます。
 予めご了承頂けますよう何卒宜しくお願い申し上げます。`,
+  },
+  {
+    title: "INFORMATION",
+    summary: "宅急便コレクトにおけるクレジットカードタッチ決済の導入について",
+    content: "sample text sample text sample text sample text sample text ",
   },
   {
     title: "NOW HIRING",
@@ -24,7 +24,7 @@ const newsItems = [
 ];
 
 export default function NewsSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(1);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section className="py-20 border-t border-b border-[#d6d6d6]">

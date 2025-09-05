@@ -1,52 +1,51 @@
 "use client";
 
-import { useParams, usePathname, useRouter } from "next/navigation";
-import Image from "next/image";
-import { motion } from "framer-motion";
-// import { products } from "@/lib/products";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import type { Product } from "@/app/interfaces/Product";
 import { ProductsAPI } from "@/app/lib/api/products";
-import { useEffect, useState } from "react";
-import { Product } from "@/app/interfaces/Product";
-import { useCartStore } from "@/app/stores/cartStore";
-import { CartAPI } from "@/app/lib/api/carts";
-import { useUserStore } from "@/app/stores/userStore";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { PenLine } from "lucide-react";
 
-export default function ProductDetailPage() {
+export default function AdminProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const user = useUserStore((state) => state.user);
-  const pathname = usePathname();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<Partial<Product>>({});
+  const [editing, setEditing] = useState({
+    name: false,
+    description: false,
+    fabric: false,
+    price: false,
+    stock: false,
+    category: false,
+    isActive: false,
+    images: false,
+  });
+
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const data = await ProductsAPI.byId(Number(id));
         if (!mounted) return;
-        const fallbackProduct: Product & {
-          image: string;
-          subImages: string[];
-          sizeChart: {
-            columns: string[];
-            rows: { label: string; values: (string | number)[] }[];
-          };
-        } = {
-          ...data,
-          image: data.imageUrls[0] ?? "/fallback.jpg",
-          subImages: data.imageUrls.slice(1) ?? [],
-          sizeChart: {
-            columns: ["Length", "Width"],
-            rows: [
-              { label: "S", values: [60, 45] },
-              { label: "M", values: [65, 50] },
-            ],
-          },
-        };
-        setProduct(fallbackProduct);
+        setProduct(data);
+        setForm({
+          name: data.name,
+          description: data.description,
+          fabric: data.fabric,
+          price: data.price,
+          stock: data.stock,
+          category: data.category,
+          imageUrls: data.imageUrls ?? [],
+          isActive: data.isActive,
+        });
         setError(null);
       } catch (e) {
         if (!mounted) return;
@@ -55,168 +54,329 @@ export default function ProductDetailPage() {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
-  const { addItem } = useCartStore();
 
-const handleAddToCart = async () => {
-  if(!product) return;
-  if (!user) {
-    router.push(`/login?redirect=/cart`);
-    return null;
-  }
-  try {
-    await CartAPI.add({
-      productId: product.id,
-      quantity: quantity,
+  const handleDelete = async () => {
+    if (!product) return;
+    const confirmed = window.confirm("本当に削除しますか？");
+    if (!confirmed) return;
+    try {
+      await ProductsAPI.delete(Number(product.id));
+      router.push("/admin/products");
+    } catch (e) {
+      console.error(e);
+      alert("削除に失敗しました");
+    }
+  };
+
+  const handleField = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    let v: unknown = value;
+    if (type === "number") v = value === "" ? "" : Number(value);
+    if (name === "isActive") v = (e.target as HTMLInputElement).checked;
+    setForm((prev) => ({ ...prev, [name]: v }));
+  };
+
+  const handleImgChange = (index: number, value: string) => {
+    setForm((prev) => {
+      const arr = Array.isArray(prev.imageUrls) ? [...prev.imageUrls] : [];
+      arr[index] = value;
+      return { ...prev, imageUrls: arr };
     });
+  };
 
-    addItem({
-      id: Date.now(), // 仮ID（APIから返る場合はそちらを使う）
-      productId: product.id,
-      productName: product.name,
-      productDescription: product.description,
-      price: product.price,
-      quantity: quantity,
-      subtotal: product.price * quantity,
+  const handleImgAdd = () => {
+    setForm((prev) => {
+      const arr = Array.isArray(prev.imageUrls) ? [...prev.imageUrls] : [];
+      arr.push("");
+      return { ...prev, imageUrls: arr };
     });
+  };
 
-    // alert("カートに追加しました！");
-    router.push("/cart");
-  } catch (error) {
-    console.error("カート追加に失敗", error);
-    alert("カートへの追加に失敗しました。");
-  }
-};
+  const handleImgRemove = (index: number) => {
+    setForm((prev) => {
+      const arr = Array.isArray(prev.imageUrls) ? [...prev.imageUrls] : [];
+      arr.splice(index, 1);
+      return { ...prev, imageUrls: arr };
+    });
+  };
 
-  if (loading) return <div className="p-6">Loading...</div>;
-
-  if (error) {
-    console.error("商品取得エラー:", error);
+  const dirty = useMemo(() => {
+    if (!product) return false;
+    const compare = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
     return (
-      <div className="p-6 text-red-500">商品情報の取得に失敗しました。</div>
+      compare(form.name, product.name) ||
+      compare(form.description, product.description) ||
+      compare(form.fabric, product.fabric) ||
+      compare(form.price, product.price) ||
+      compare(form.stock, product.stock) ||
+      compare(form.category, product.category) ||
+      compare(form.isActive, product.isActive) ||
+      compare(form.imageUrls, product.imageUrls)
     );
-  }
+  }, [form, product]);
 
-  if (!product)
-    return <div className="p-6 text-gray-500">商品が見つかりません。</div>;
+  const handleSave = async () => {
+    if (!product) return;
+    setSaving(true);
+    try {
+      const payload: Partial<Product> = {
+        name: form.name ?? product.name,
+        description: form.description ?? product.description,
+        fabric: form.fabric ?? product.fabric,
+        price: typeof form.price === "number" ? form.price : product.price,
+        stock: typeof form.stock === "number" ? form.stock : product.stock,
+        category: (form.category ?? product.category) as string,
+        imageUrls: (form.imageUrls ?? product.imageUrls) as string[],
+        isActive: typeof form.isActive === "boolean" ? form.isActive : product.isActive,
+      };
+      const saved = await ProductsAPI.update(Number(product.id), payload);
+      setProduct(saved);
+      setForm({
+        name: saved.name,
+        description: saved.description,
+        fabric: saved.fabric,
+        price: saved.price,
+        stock: saved.stock,
+        category: saved.category,
+        imageUrls: saved.imageUrls ?? [],
+        isActive: saved.isActive,
+      });
+    } catch (e) {
+      console.error(e);
+      alert("保存に失敗しました");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (!product) return;
+    setForm({
+      name: product.name,
+      description: product.description,
+      fabric: product.fabric,
+      price: product.price,
+      stock: product.stock,
+      category: product.category,
+      imageUrls: product.imageUrls ?? [],
+      isActive: product.isActive,
+    });
+    setEditing({
+      name: false,
+      description: false,
+      fabric: false,
+      price: false,
+      stock: false,
+      category: false,
+      isActive: false,
+      images: false,
+    });
+  };
+
+  const formatPrice = (v?: number) =>
+    typeof v === "number" ? `¥${v.toLocaleString()}` : "-";
+  const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleString() : "-");
+
+  if (loading) return <section className="py-10 px-6">読み込み中...</section>;
+  if (error) return <section className="py-10 px-6 text-red-500">{error}</section>;
+  if (!product) return <section className="py-10 px-6 text-gray-500">商品が見つかりません。</section>;
+
+  const firstImg = ((form.imageUrls ?? product.imageUrls) as string[] | undefined)?.[0] || "/images/no-image.jpg";
+
   return (
-    <>
-      <div className="relative w-full h-screen">
-        {/* 商品画像（全画面表示） */}
-        {/* 商品画像（フェードイン） */}
-        <motion.div
-          className="absolute inset-0"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }} // ← お好みで調整
-        >
-          <Image
-            src={product.imageUrls[0] ?? "/images/haerin1.jpg"}
-            alt={product.name}
-            fill
-            className="object-cover"
-            priority
-          />
-        </motion.div>
-
-        {/* 左下：ID・カテゴリ・名前 */}
-        <div className="absolute bottom-6 left-6 bg-opacity-80 px-4 py-2 text-[#222] text-sm tracking-wide">
-          {/* ←仮のカテゴリ。後ほどproducts.tsに追加予定 */}
-          <p className="font-medium text-lg">{product.name} / Jacket</p>
+    <section className="py-8 mt-12">
+      {/* Header actions */}
+      <div className="max-w-6xl mx-auto px-6 flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">商品詳細（管理）</h1>
+          <p className="text-sm text-gray-500">ID: {product.id}</p>
+          <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><PenLine className="w-4 h-4" /> 文字をダブルクリックして編集できます</p>
         </div>
-
-        {/* 右下：縦書きの DETAILS + 矢印 */}
-        <div className="absolute bottom-6 right-6 flex flex-col items-center text-[#222] cursor-pointer">
-          {/* DETAILS（縦書き） */}
-          <span
-            className="text-sm tracking-widest"
-            style={{ writingMode: "vertical-rl" }}
-          >
-            DETAILS
-          </span>
-
-          {/* 縦の下矢印（SVG） */}
-          <svg
-            width="16"
-            height="40"
-            viewBox="0 0 16 40"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="mt-2"
-          >
-            <line x1="8" y1="0" x2="8" y2="30" stroke="#222" strokeWidth="2" />
-            <polyline
-              points="4,26 8,30 12,26"
-              fill="none"
-              stroke="#222"
-              strokeWidth="2"
-            />
-          </svg>
+        <div className="flex gap-2">
+          <Link href="/admin/products">
+            <Button variant="outline">一覧へ戻る</Button>
+          </Link>
+          <Button variant="outline" onClick={handleReset} disabled={!dirty}>リセット</Button>
+          <Button onClick={handleSave} disabled={!dirty || saving} className="bg-black text-white hover:bg-black/90">
+            {saving ? "保存中..." : "編集内容を保存"}
+          </Button>
+          <Button variant="destructive" onClick={handleDelete}>削除</Button>
         </div>
       </div>
-      <section className="w-full px-6 py-20 bg-[#f8f8f8] text-[#222]">
-        <h2 className="text-2xl font-semibold mb-12 tracking-widest">
-          {product.name}
-        </h2>
 
-        {/* 3カラム構成 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
-          {/* 左カラム：詳細・サイズ表 */}
-          <div className="text-sm space-y-6">
-            <p>{product.description}</p>
+      <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Images */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>画像</CardTitle>
+            <CardDescription>1枚目がサムネイルとして使用されます。</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!editing.images ? (
+              <div
+                className="relative"
+                onDoubleClick={() => setEditing((e) => ({ ...e, images: true }))}
+                title="ダブルクリックで編集"
+              >
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {(() => {
+                    const imgs = (form.imageUrls ?? product.imageUrls) || [];
+                    const list = [firstImg, ...imgs.slice(1)];
+                    return list.map((url, i) => (
+                      <div key={`${url}-${i}`} className="relative w-full aspect-square border rounded-sm overflow-hidden bg-white">
+                        <Image src={url} alt={`image-${i + 1}`} fill className="object-cover" unoptimized />
+                        {/* 編集アイコンを画像上に重ねて表示 */}
+                        <div className="pointer-events-none absolute top-2 right-2 rounded-full bg-white/80 border p-1 shadow-sm">
+                          <PenLine className="w-4 h-4 text-gray-600" />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {(form.imageUrls as string[] | undefined)?.map((url, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="relative w-20 h-20 border rounded overflow-hidden bg-white">
+                      <Image src={url || "/images/no-image.jpg"} alt={`image-${i+1}`} fill className="object-cover" unoptimized />
+                    </div>
+                    <input
+                      className="flex-1 border rounded px-3 py-2"
+                      value={url}
+                      onChange={(e) => handleImgChange(i, e.target.value)}
+                      placeholder="/images/sample.jpg または https://..."
+                    />
+                    <Button type="button" variant="outline" onClick={() => handleImgRemove(i)}>削除</Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" onClick={handleImgAdd}>＋ 画像URLを追加</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            {/* サイズ表 */}
-            <div>
-              <p className="font-bold text-sm">SIZE CHART :</p>
-              <p className="text-sm leading-relaxed">
-                S: 着丈 60cm / 身幅 45cm
-                <br />
-                M: 着丈 65cm / 身幅 50cm
-                <br />
-                L: 着丈 70cm / 身幅 55cm
-              </p>
+        {/* Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>販売情報</CardTitle>
+            <CardDescription>価格・在庫・公開状態など</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {/* 商品名 */}
+            <div className="flex items-center gap-3">
+              <span className="w-24 text-gray-600">商品名</span>
+              {!editing.name ? (
+                <span className="flex-1 group inline-flex items-center gap-1 cursor-text" onDoubleClick={() => setEditing((e) => ({ ...e, name: true }))} title="ダブルクリックで編集">
+                  <PenLine className="w-4 h-4 text-gray-400 opacity-60 group-hover:opacity-100" />
+                  <span className="font-medium text-gray-900">{form.name ?? product.name}</span>
+                </span>
+              ) : (
+                <input className="flex-1 border rounded px-3 py-2" name="name" value={String(form.name ?? '')} onChange={handleField} />
+              )}
             </div>
-          </div>
+            {/* カテゴリ */}
+            <div className="flex items-center gap-3">
+              <span className="w-24 text-gray-600">カテゴリ</span>
+              {!editing.category ? (
+                <span className="flex-1 group inline-flex items-center gap-1 cursor-text" onDoubleClick={() => setEditing((e) => ({ ...e, category: true }))} title="ダブルクリックで編集">
+                  <PenLine className="w-4 h-4 text-gray-400 opacity-60 group-hover:opacity-100" />
+                  <span className="capitalize">{(form.category ?? product.category) || '-'}</span>
+                </span>
+              ) : (
+                <select name="category" className="border rounded px-3 py-2" value={String(form.category ?? '')} onChange={handleField}>
+                  <option value="jacket">Jacket</option>
+                  <option value="pants">Pants</option>
+                  <option value="shirt">Shirt</option>
+                </select>
+              )}
+            </div>
+            {/* 価格 */}
+            <div className="flex items-center gap-3">
+              <span className="w-24 text-gray-600">価格</span>
+              {!editing.price ? (
+                <span className="group inline-flex items-center gap-1 cursor-text" onDoubleClick={() => setEditing((e) => ({ ...e, price: true }))} title="ダブルクリックで編集">
+                  <PenLine className="w-4 h-4 text-gray-400 opacity-60 group-hover:opacity-100" />
+                  <span>{formatPrice(typeof form.price === 'number' ? form.price : product.price)}</span>
+                </span>
+              ) : (
+                <input type="number" name="price" className="border rounded px-3 py-2" value={Number(form.price ?? 0)} onChange={handleField} />
+              )}
+            </div>
+            {/* 在庫 */}
+            <div className="flex items-center gap-3">
+              <span className="w-24 text-gray-600">在庫</span>
+              {!editing.stock ? (
+                <span className="group inline-flex items-center gap-1 cursor-text" onDoubleClick={() => setEditing((e) => ({ ...e, stock: true }))} title="ダブルクリックで編集">
+                  <PenLine className="w-4 h-4 text-gray-400 opacity-60 group-hover:opacity-100" />
+                  <span>{typeof form.stock === 'number' ? form.stock : (product.stock ?? 0)}</span>
+                </span>
+              ) : (
+                <input type="number" name="stock" className="border rounded px-3 py-2" value={Number(form.stock ?? 0)} onChange={handleField} />
+              )}
+            </div>
+            {/* 公開状態 */}
+            <div className="flex items-center gap-3">
+              <span className="w-24 text-gray-600">公開状態</span>
+              {!editing.isActive ? (
+                <span className="group inline-flex items-center gap-1 cursor-text" onDoubleClick={() => setEditing((e) => ({ ...e, isActive: true }))} title="ダブルクリックで編集">
+                  <PenLine className="w-4 h-4 text-gray-400 opacity-60 group-hover:opacity-100" />
+                  <span>{(typeof form.isActive === 'boolean' ? form.isActive : product.isActive) ? '公開' : '非公開'}</span>
+                </span>
+              ) : (
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="isActive" checked={Boolean(form.isActive)} onChange={handleField} />
+                  <span>公開</span>
+                </label>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-24 text-gray-600">作成日時</span>
+              <span>{formatDate(product.createdAt)}</span>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* 中央カラム：カラー・サイズ・画像・価格 */}
-          <div className="space-y-4">
+        {/* Details */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>商品詳細</CardTitle>
+            <CardDescription>購入者に表示される説明・素材など</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <p className="font-bold text-sm">FABRIC :</p>
-              <p className="text-sm">{product.fabric}</p>
+              <div className="text-xs text-gray-600 mb-1">説明</div>
+              {!editing.description ? (
+                <div className="group cursor-text" onDoubleClick={() => setEditing((e) => ({ ...e, description: true }))} title="ダブルクリックで編集">
+                  <div className="flex items-start gap-2">
+                    <PenLine className="w-4 h-4 mt-1 text-gray-400 opacity-60 group-hover:opacity-100" />
+                    <p className="whitespace-pre-wrap leading-relaxed">{form.description ?? product.description}</p>
+                  </div>
+                </div>
+              ) : (
+                <textarea name="description" className="w-full min-h-32 border rounded px-3 py-2" value={String(form.description ?? '')} onChange={handleField} />
+              )}
             </div>
             <div>
-              <p className="font-bold text-sm">PRICE :</p>
-              <p className="text-sm">
-                {product.price.toLocaleString()}yen (Tax inc.)
-              </p>
+              <div className="text-xs text-gray-600 mb-1">生地</div>
+              {!editing.fabric ? (
+                <div className="group cursor-text inline-flex items-center gap-2" onDoubleClick={() => setEditing((e) => ({ ...e, fabric: true }))} title="ダブルクリックで編集">
+                  <PenLine className="w-4 h-4 text-gray-400 opacity-60 group-hover:opacity-100" />
+                  <p>{(form.fabric ?? product.fabric) || '-'}</p>
+                </div>
+              ) : (
+                <input name="fabric" className="w-full border rounded px-3 py-2" value={String(form.fabric ?? '')} onChange={handleField} />
+              )}
             </div>
-          </div>
-
-          {/* 右カラム：選択フォーム */}
-          <div className="space-y-4 lg:border-l lg:pl-10 border-[#d6d6d6]">
-            <div>
-              <label className="block text-sm mb-1">QTY</label>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) =>
-                  setQuantity(Math.max(1, Number(e.target.value)))
-                }
-                className="w-full px-4 py-3 rounded-md bg-[#eaeaea]"
-                min={1}
-              />
-            </div>
-
-            <button
-              onClick={handleAddToCart}
-              className="w-full block text-center bg-[#000] text-white py-3 rounded-full tracking-widest mt-10"
-            >
-              カートに追加
-            </button>
-          </div>
-        </div>
-      </section>
-    </>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   );
 }

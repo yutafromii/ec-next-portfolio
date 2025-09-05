@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/app/stores/userStore";
 import { useMyOrders } from "@/app/lib/hooks/useMyOrders";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 export default function OrderHistory() {
   const { user } = useUserStore();
@@ -26,7 +27,7 @@ export default function OrderHistory() {
   }
 
   return (
-    <div className="space-y-12 mt-6 px-3">
+    <div className="space-y-12 mt-6 px-30">
       <h2 className="text-lg font-semibold mb-2">{user.name} さんの注文履歴</h2>
 
       {productsLoading && (
@@ -38,10 +39,10 @@ export default function OrderHistory() {
           {/* 注文情報 */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-1">
             <div className="text-sm text-muted-foreground">
-              注文日: {o.orderedAt ? new Date(o.orderedAt).toLocaleDateString() : "—"} / 注文番号: {o.orderId}
+              注文日: {o.orderedAt ? new Date(o.orderedAt).toLocaleDateString() : "—"} / 注文番号: {o.orderNumber ?? o.orderId}
             </div>
             <div className="text-sm font-medium text-right sm:text-left">
-              {o.status ?? "—"}
+              <StatusBadge value={o.status} />
             </div>
           </div>
 
@@ -49,7 +50,7 @@ export default function OrderHistory() {
           <div className="space-y-4">
             {o.items.map((it) => {
               const p = productMap[it.productId];
-              const imageUrl = p?.imageUrls?.[0] || "/images/no-image.png";
+              const imageUrl = p?.imageUrls?.[0] || "/images/no-image.jpg";
               const lineTotal = it.subtotal ?? it.price * it.quantity;
               return (
                 <div key={it.id} className="flex flex-col sm:flex-row gap-4 sm:items-start">

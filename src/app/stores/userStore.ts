@@ -7,7 +7,13 @@ export type StoreUser = {
   name: string;
   email: string;
   phoneNumber?: string | null; // ← optional / null 許容
-  address?: string | null;     // ← optional / null 許容
+  address?: string | null;     // ← optional / null 許容（旧）
+  // 新アドレス分割フィールド（段階的移行用）
+  postalCode?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
   password?: string;           // ← optional（基本は保持しない）
 };
 
