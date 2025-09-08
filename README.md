@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ECサイト Webアプリケーション
 
-## Getting Started
+## プロジェクト概要
 
-First, run the development server:
+転職用ポートフォリオとして作成した、フルスタック構成のECサイトです。  
+一般ユーザー向けのショッピング機能と、管理者向けの商品管理機能を実装しました。  
+フロントエンド、バックエンド、インフラを通じて一連の開発を経験できるように設計しています。  
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- 開発期間：2025年7月〜2025年8月  
+- 想定利用者：一般ユーザー、管理者  
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 使用技術
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### フロントエンド
 
-## Learn More
+- Webフレームワーク：**Next.js 14**  
+- 言語：**TypeScript**  
+- UI：**Tailwind CSS**, **UIコンポーネントライブラリ（shadcn/ui）**  
+- 状態管理：**Storeパターン（Zustandを利用）**  
 
-To learn more about Next.js, take a look at the following resources:
+### バックエンド
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Webフレームワーク：**Spring Boot 3.5.3**  
+- 言語：**Java**  
+- ORマッパー：**JPA (Hibernate)**  
+- 認証・認可：**セキュリティフレームワーク（JWT認証）**  
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### インフラ・その他
 
-## Deploy on Vercel
+- データベース：**PostgreSQL**  
+- コンテナ：**Docker**  
+- デプロイ環境：**Render / Vercel**  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 実装機能
+
+### ユーザー側
+
+- 商品一覧・詳細表示  
+- カート機能（追加・削除・数量変更）  
+- 注文処理（確認画面 → 完了画面）  
+- マイページ（注文履歴、会員情報編集、お届け先管理）  
+
+### 管理者側
+
+- 商品登録・編集・削除  
+- ユーザー管理  
+- 注文管理  
+
+---
+
+## 工夫した点
+
+- **再利用性の高い設計**：状態管理をStoreに集約し、UIや機能をまたいで共通化できる構成に  
+- **セキュリティを意識した設計**：認証認可を導入し、セキュアなAPIアクセスを実現  
+- **デプロイ性の向上**：Docker化により開発環境と本番環境の差異を低減、クラウド環境への展開を容易に
+
+---
+
+## デモ環境
+
+- フロントエンド（Vercel）: <https://ec-next-portfolio.vercel.app/>  
+- バックエンドAPI（Render）: <https://ec-portfolio-backend-8bl5.onrender.com>  
+
+※ 無料枠デプロイのため、初回アクセス時に数十秒かかる場合があります。
