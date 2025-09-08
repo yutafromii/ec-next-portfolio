@@ -76,10 +76,12 @@ export default function ProductDetailPage() {
           const cart = await CartAPI.me();
           if (!mounted) return;
           setItems(cart.items ?? []);
-          const q = cart.items?.find((i) => i.productId === productId)?.quantity ?? 0;
+          const q =
+            cart.items?.find((i) => i.productId === productId)?.quantity ?? 0;
           setCurrentQtyInCart(q);
         } else {
-          const q = cartItems.find((i) => i.productId === productId)?.quantity ?? 0;
+          const q =
+            cartItems.find((i) => i.productId === productId)?.quantity ?? 0;
           setCurrentQtyInCart(q);
         }
       } catch {
@@ -87,7 +89,9 @@ export default function ProductDetailPage() {
         setCurrentQtyInCart(0);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, productId]);
 
@@ -131,9 +135,9 @@ export default function ProductDetailPage() {
     if (!user) {
       // ゲスト：ローカルに追加 → カートへ
       addItem({
-        id: Date.now(),               // 仮ID
+        id: Date.now(), // 仮ID
         productId: product.id,
-        name: product.name,           // ★ cart/page.tsx は item.name を参照
+        name: product.name, // ★ cart/page.tsx は item.name を参照
         price: product.price,
         quantity,
         subtotal: product.price * quantity,
@@ -190,9 +194,21 @@ export default function ProductDetailPage() {
           >
             DETAILS
           </span>
-          <svg width="16" height="40" viewBox="0 0 16 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-2">
+          <svg
+            width="16"
+            height="40"
+            viewBox="0 0 16 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="mt-2"
+          >
             <line x1="8" y1="0" x2="8" y2="30" stroke="#222" strokeWidth="2" />
-            <polyline points="4,26 8,30 12,26" fill="none" stroke="#222" strokeWidth="2" />
+            <polyline
+              points="4,26 8,30 12,26"
+              fill="none"
+              stroke="#222"
+              strokeWidth="2"
+            />
           </svg>
         </div>
       </div>
@@ -254,14 +270,16 @@ export default function ProductDetailPage() {
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
                   >
-                    {Array.from({ length: remaining }, (_, i) => i + 1).map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
+                    {Array.from({ length: remaining }, (_, i) => i + 1).map(
+                      (n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      )
+                    )}
                   </select>
                   <p className="mt-1 text-xs text-gray-600">
-                    お一人様2点まで（カート内：{currentQtyInCart}点 / 残り：{remaining}点）
+                    お一人様2点まで（カート内：{currentQtyInCart}点 ）
                   </p>
                 </>
               )}
