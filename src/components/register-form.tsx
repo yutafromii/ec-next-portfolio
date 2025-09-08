@@ -15,10 +15,12 @@ import { useUserStore } from "@/app/stores/userStore";
 import { CartAPI } from "@/app/lib/api/carts";
 
 // 登録フォームの型
+type Role = "USER" | "ADMIN";
 interface RegisterUser {
   name: string;
   email: string;
   password: string;
+  role?: Role; // オプション：管理者登録を許可する場合のみ付与
 }
 
 // /users/me の型（login-form と同一）
@@ -36,11 +38,12 @@ interface UserResponse {
 }
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<"div">) {
-  const [user, setUser] = useState<RegisterUser>({ name: "", email: "", password: "" });
+  const [user, setUser] = useState<RegisterUser>({ name: "", email: "", password: "", role: "USER" });
   const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/";
+  const allowAdmin = (process.env.NEXT_PUBLIC_ALLOW_ADMIN_SIGNUP ?? "").toLowerCase() === "true" || searchParams.get("allowAdmin") === "true";
   const setUserStore = useUserStore((s) => s.setUser);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +63,12 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
 
     try {
       // 1) /auth/register
-      await http.post(EP.auth.register(), user);
+      // 管理者登録を明示的に許可している場合のみ role を付与
+      const registerPayload = allowAdmin && user.role === "ADMIN"
+        ? { name: user.name, email: user.email, password: user.password, role: "ADMIN" as const }
+        : { name: user.name, email: user.email, password: user.password };
+
+      await http.post(EP.auth.register(), registerPayload);
 
       // 2) 直後に /auth/login して token を得る
       const { token } = await http.post<{ token: string }>(EP.auth.login(), {
@@ -165,6 +173,23 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
                   required
                 />
               </div>
+
+              {allowAdmin && (
+                <div className="grid gap-2">
+                  <Label htmlFor="role">Role</Label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={user.role}
+                    onChange={(e) => setUser((prev) => ({ ...prev, role: e.target.value as Role }))}
+                    className="border rounded-md px-3 py-2"
+                  >
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                  </select>
+                  <p className="text-xs text-gray-500">管理者登録を有効化するには NEXT_PUBLIC_ALLOW_ADMIN_SIGNUP=true または ?allowAdmin=true を付与します。</p>
+                </div>
+              )}
 
               {error && <p className="text-red-500 -mt-2" role="alert">{error}</p>}
 
