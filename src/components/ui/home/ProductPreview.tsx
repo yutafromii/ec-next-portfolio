@@ -57,13 +57,17 @@ export default function ProductPreview() {
           {items.map((p) => {
             const image = p.imageUrls?.[0] ?? "/images/no-image.jpg";
             return (
-              <Link key={p.id} href={`/products/${p.id}`} className="group text-center">
+              <Link
+                key={p.id}
+                href={`/products/${p.id}`}
+                className="group text-center"
+              >
                 <div className="relative aspect-square bg-[#f7f7f7]">
                   <Image
                     src={image}
                     alt={p.name}
                     fill
-                    className="object-contain p-4 transition-opacity duration-200 group-hover:opacity-70"
+                    className="object-contain transition-opacity duration-200 group-hover:opacity-70"
                   />
                 </div>
                 <p className="mt-3 text-sm font-medium text-[#222222] truncate">

@@ -178,7 +178,7 @@ export default function ProductDetailPage() {
             src={mainImg}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-cover object-top"
             priority
           />
         </motion.div>

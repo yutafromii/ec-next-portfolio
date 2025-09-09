@@ -4,13 +4,62 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, LogIn, LogOut, ShoppingCart, User } from "lucide-react";
+import { Menu, X, LogIn, ShoppingCart, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUserStore } from "@/app/stores/userStore";
 import { useCartStore } from "@/app/stores/cartStore";
 import { useEnsureCart } from "@/app/lib/hooks/useEnsureCart";
 import { AuthAPI } from "@/app/lib/api/auth";
 import type { LucideIcon } from "lucide-react";
+
+/* ------------ 型ガード（any 不使用） ------------ */
+type AuthorityEntry = string | { authority: string };
+
+function isStringArray(v: unknown): v is string[] {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+function isAuthorityArray(v: unknown): v is AuthorityEntry[] {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (x) =>
+        typeof x === "string" ||
+        (typeof x === "object" &&
+          x !== null &&
+          "authority" in (x as Record<string, unknown>) &&
+          typeof (x as Record<string, unknown>).authority === "string")
+    )
+  );
+}
+function isAdminUser(u: unknown): boolean {
+  if (typeof u !== "object" || u === null) return false;
+  const obj = u as Record<string, unknown>;
+
+  // roles: string[] 例: ["USER","ADMIN"]
+  const roles = obj.roles;
+  if (isStringArray(roles) && roles.includes("ADMIN")) return true;
+
+  // authorities: (string | {authority:string})[]
+  const authorities = obj.authorities;
+  if (isAuthorityArray(authorities)) {
+    for (const a of authorities) {
+      if (typeof a === "string" && (a === "ROLE_ADMIN" || a === "ADMIN"))
+        return true;
+      if (typeof a === "object") {
+        const val = (a as { authority: string }).authority;
+        if (val === "ROLE_ADMIN" || val === "ADMIN") return true;
+      }
+    }
+  }
+
+  // role: string 例: "ADMIN" / "ROLE_ADMIN"
+  const role = obj.role;
+  if (typeof role === "string" && (role === "ADMIN" || role === "ROLE_ADMIN"))
+    return true;
+
+  return false;
+}
+/* ------------------------------------------------ */
 
 /* ▼ アイコン＋文字（縦並び） */
 function IconWithLabel({
@@ -63,15 +112,15 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
 
-  const { user /*, setUser, logout: logoutStore*/ } = useUserStore();
+  const { user } = useUserStore();
   const { items, clearCart } = useCartStore();
-  const { loading: cartLoading } = useEnsureCart();
+  useEnsureCart(); // サーバーカート同期（戻り値は未使用でもOK）
 
-  // 未ログイン時はバッジを表示しない
   const totalQty = user
     ? items.reduce((sum, it) => sum + (it.quantity ?? 0), 0)
     : 0;
   const isHeaderHidden = pathname === "/login" || pathname === "/register";
+  const isAdmin = isAdminUser(user);
 
   useEffect(() => {
     if (isHeaderHidden) return;
@@ -88,20 +137,17 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await AuthAPI.logout(); // サーバ側Cookieを無効化
-      // ここでクライアント状態もクリア
+      await AuthAPI.logout();
       try {
-        // userStore のクリア（あなたの store API に合わせて一つ選択）
-        // setUser?.(null);
-        // logoutStore?.();
-        // 最低限の確実策：ページリロードで状態リセット
-        sessionStorage.removeItem(`checkout.shipping.${user?.id}`);
+        sessionStorage.removeItem(
+          `checkout.shipping.${(user as { id?: number | string } | null)?.id}`
+        );
       } catch {}
-      clearCart(); // カートUIも念のため空に
+      clearCart();
       setMenuOpen(false);
       router.replace("/login");
       router.refresh();
-    } catch (e) {
+    } catch {
       alert("ログアウトに失敗しました。もう一度お試しください。");
     }
   };
@@ -183,7 +229,6 @@ export default function Header() {
                 MYPAGE
               </Link>
 
-              {/* ▼ ここを LOGIN / LOGOUT で出し分け */}
               {user ? (
                 <button
                   onClick={handleLogout}
@@ -197,9 +242,12 @@ export default function Header() {
                 </Link>
               )}
 
-              <Link href="/admin" onClick={() => setMenuOpen(false)}>
-                ADMIN
-              </Link>
+              {/* 管理者のみ表示 */}
+              {isAdmin && (
+                <Link href="/admin" onClick={() => setMenuOpen(false)}>
+                  ADMIN
+                </Link>
+              )}
             </motion.div>
           </motion.div>
         )}

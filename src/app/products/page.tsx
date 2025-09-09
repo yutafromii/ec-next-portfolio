@@ -194,7 +194,7 @@ function ProductListPageInner() {
                 alt={product.name}
                 fill
                 sizes="(min-width:1280px) 20vw, (min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw"
-                className="object-contain transition-opacity duration-300 ease-in-out md:group-hover:opacity-80 p-4 sm:p-6 md:p-8"
+                className="object-contain transition-opacity duration-300 ease-in-out md:group-hover:opacity-80"
                 unoptimized
               />
               <p
