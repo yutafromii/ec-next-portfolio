@@ -180,8 +180,7 @@ function ProductListPageInner() {
         </div>
       </div>
 
-      {/* グリッド（レスポンシブ版のまま） */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-8 px-0.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 px-0.5">
         {filteredProducts.map((product) => (
           <Link
             key={product.id}
