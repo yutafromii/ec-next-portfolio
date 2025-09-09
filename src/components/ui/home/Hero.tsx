@@ -54,8 +54,10 @@ export default function Hero() {
 
           {/* Heroテキスト（画像の中） */}
           <div className="absolute bottom-8 left-8 text-white z-10 space-y-4">
-            <h1 className="text-3xl md:text-5xl font-bold">2025 SUMMER</h1>
-            <p className="text-sm text-gray-200">エッジの効いたスタイルを。</p>
+            <h1 className="text-3xl md:text-5xl font-bold">
+              2030 EC portfolio
+            </h1>
+            <p className="text-sm text-gray-200">機能性×着心地×デザイン</p>
           </div>
         </div>
       </div>
