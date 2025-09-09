@@ -16,8 +16,8 @@ export default function LeaveConfirm() {
   const [open, setOpen] = useState(false);
 
   const handleLeave = () => {
-    // ✅ 実際の退会処理（API通信など）をここに記述
-    alert("退会処理を実行しました");
+    // 実際の退会処理（API通信など）をここに記述
+    alert("退会処理を実行しました※今回は未実装");
     setOpen(false);
   };
 
@@ -45,7 +45,7 @@ export default function LeaveConfirm() {
 
       <hr className="mt-20 border-border" />
 
-      {/* ✅ モーダルコンポーネント */}
+      {/* モーダルコンポーネント */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -54,7 +54,8 @@ export default function LeaveConfirm() {
               最終確認
             </DialogTitle>
             <DialogDescription>
-              本当に退会してもよろしいですか？<br />
+              本当に退会してもよろしいですか？
+              <br />
               この操作は取り消せません。
             </DialogDescription>
           </DialogHeader>

@@ -12,7 +12,6 @@ import { useEnsureCart } from "@/app/lib/hooks/useEnsureCart";
 import { AuthAPI } from "@/app/lib/api/auth";
 import type { LucideIcon } from "lucide-react";
 
-/* ------------ 型ガード（any 不使用） ------------ */
 type AuthorityEntry = string | { authority: string };
 
 function isStringArray(v: unknown): v is string[] {
