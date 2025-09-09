@@ -117,7 +117,7 @@ export default function Header() {
           scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
         }`}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="flex items-center justify-between">
           {/* 左：ハンバーガー（MENU） */}
           <IconWithLabel
             icon={Menu}

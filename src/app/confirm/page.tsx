@@ -29,7 +29,9 @@ export default function CheckoutConfirmPage() {
   // カート空の場合は演出表示→自動で商品一覧へ
   useEffect(() => {
     if (items.length > 0) return;
-    try { router.prefetch("/products"); } catch {}
+    try {
+      router.prefetch("/products");
+    } catch {}
     intervalRef.current = setInterval(() => {
       setSeconds((s) => (s > 0 ? s - 1 : s));
     }, 1000);
@@ -44,32 +46,45 @@ export default function CheckoutConfirmPage() {
 
   if (!authed) return null;
   if (loading) {
-    return <div className="bg-[#f6f6f6] min-h-screen px-4 py-12">読み込み中...</div>;
+    return (
+      <div className="bg-[#f6f6f6] min-h-screen px-4 py-12">読み込み中...</div>
+    );
   }
   if (error) {
-    return <div className="bg-[#f6f6f6] min-h-screen px-4 py-12 text-red-500">{error}</div>;
+    return (
+      <div className="bg-[#f6f6f6] min-h-screen px-4 py-12 text-red-500">
+        {error}
+      </div>
+    );
   }
   if (!items.length) {
     return (
       <div className="bg-[#f6f6f6] min-h-screen flex flex-col justify-center items-center px-4 py-16 text-center">
         <CheckCircle className="text-green-500 w-16 h-16 mb-4" />
-        <h1 className="text-2xl font-bold mb-2 text-[#222]">ご注文ありがとうございます</h1>
+        <h1 className="text-2xl font-bold mb-2 text-[#222]">
+          ご注文ありがとうございます
+        </h1>
         <p className="text-gray-600 mb-6">
-          ご注文を受け付けました。<br />
+          ご注文を受け付けました。
+          <br />
           ご登録のメールアドレスに確認メールをお送りしました。
         </p>
         <div className="space-y-2 text-sm text-gray-700 mb-10">
           <p>注文番号：</p>
           <p>注文日時：</p>
         </div>
-        <p className="text-gray-500 mb-6">{seconds}秒後に商品一覧へ戻ります。</p>
+        <p className="text-gray-500 mb-6">
+          {seconds}秒後に商品一覧へ戻ります。
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#f6f6f6] min-h-screen px-4 py-12 mt-8">
-      <h1 className="text-2xl font-semibold text-center mb-8">ショッピングカート</h1>
+    <div className="bg-[#f6f6f6] min-h-screen px-6 py-12 mt-8">
+      <h1 className="text-2xl font-semibold text-center mb-8">
+        ショッピングカート
+      </h1>
       <StepIndicator steps={steps} current={1} />
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-10">
@@ -77,8 +92,23 @@ export default function CheckoutConfirmPage() {
           <OrderItemList />
           <OrderDetailsSection open={addrOpen} onOpenChange={setAddrOpen} />
         </div>
-        <div className="md:col-span-1">
+        <div className="md:col-span-1 space-y-4">
           <OrderSummary onRequireShipping={() => setAddrOpen(true)} />
+
+          {/* お買い物を続ける（/productsへ） */}
+          <button
+            type="button"
+            aria-label="お買い物を続ける"
+            className="w-full border border-[#d6d6d6] bg-white py-3 md:py-4 text-base md:text-lg font-bold
+                 flex items-center justify-center gap-2
+                 hover:bg-gray-50
+                 transition-[opacity,background-color] duration-200
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
+            onClick={() => router.push("/products")}
+          >
+            <span className="text-xl md:text-2xl">◀</span>
+            <span>お買い物を続ける</span>
+          </button>
         </div>
       </section>
     </div>

@@ -15,7 +15,12 @@ import StepIndicator from "@/components/ui/common/StepIndicator";
 const LIMIT_PER_PERSON = 2;
 
 export default function CartPage() {
-  const { items: cartItems, setItems, updateQuantity, removeItem } = useCartStore();
+  const {
+    items: cartItems,
+    setItems,
+    updateQuantity,
+    removeItem,
+  } = useCartStore();
   const [loading, setLoading] = useState(true);
   const [productMap, setProductMap] = useState<Record<number, Product>>({});
 
@@ -66,12 +71,17 @@ export default function CartPage() {
   }, [setItems, user]);
 
   // 数量変更（サーバで“セット”→返り値でストア同期）
-  const handleQuantityChange = async (cartItemId: number, productId: number, delta: number) => {
+  const handleQuantityChange = async (
+    cartItemId: number,
+    productId: number,
+    delta: number
+  ) => {
     const item = cartItems.find((it) => it.id === cartItemId);
     if (!item) return;
 
     const product = productMap[productId];
-    const stock = typeof product?.stock === "number" ? product.stock : LIMIT_PER_PERSON;
+    const stock =
+      typeof product?.stock === "number" ? product.stock : LIMIT_PER_PERSON;
     const maxAllowed = Math.min(LIMIT_PER_PERSON, stock);
 
     const desired = Math.max(1, item.quantity + delta); // 0は削除ボタンで対応
@@ -118,7 +128,9 @@ export default function CartPage() {
   if (!cartItems.length)
     return (
       <div className="px-6 py-12 mx-auto text-[#222] bg-[#f8f8f8] mt-8">
-        <h1 className="text-2xl font-semibold text-center mb-8">ショッピングカート</h1>
+        <h1 className="text-2xl font-semibold text-center mb-8">
+          ショッピングカート
+        </h1>
         <StepIndicator steps={steps} current={0} />
 
         <section className="bg-[#f6f6f6] px-4 py-12 mt-6">
@@ -152,13 +164,17 @@ export default function CartPage() {
         localStorage.setItem("pendingCart", JSON.stringify(payload));
       } catch {}
     }
-    router.push(user ? "/confirm" : `/login?redirect=${encodeURIComponent("/confirm")}`);
+    router.push(
+      user ? "/confirm" : `/login?redirect=${encodeURIComponent("/confirm")}`
+    );
   };
   const handleToBack = () => router.push("/products");
 
   return (
     <div className="px-6 py-12 mt-8 mx-auto text-[#222] bg-[#f8f8f8]">
-      <h1 className="text-2xl font-semibold text-center mb-8">ショッピングカート</h1>
+      <h1 className="text-2xl font-semibold text-center mb-8">
+        ショッピングカート
+      </h1>
       <StepIndicator steps={steps} current={0} />
 
       <div className="text-center my-8 text-base text-[#222]">
@@ -178,7 +194,10 @@ export default function CartPage() {
 
         {cartItems.map((item) => {
           const product = productMap[item.productId];
-          const stock = typeof product?.stock === "number" ? product.stock : LIMIT_PER_PERSON;
+          const stock =
+            typeof product?.stock === "number"
+              ? product.stock
+              : LIMIT_PER_PERSON;
           const maxAllowed = Math.min(LIMIT_PER_PERSON, stock);
 
           return (
@@ -198,7 +217,9 @@ export default function CartPage() {
                   <div className="w-32 md:w-36 bg-gray-100">画像なし</div>
                 )}
                 <div className="text-sm text-[#222] space-y-1">
-                  <p className="font-bold text-md text-[#44444f]">{item.name}</p>
+                  <p className="font-bold text-md text-[#44444f]">
+                    {item.name}
+                  </p>
                   <p className="font-bold">
                     {item.price.toLocaleString()}yen (Tax inc.)
                   </p>
@@ -209,7 +230,9 @@ export default function CartPage() {
               <div className="flex md:flex-col flex-row justify-between md:items-center items-start gap-4">
                 <div className="flex border border-[#d6d6d6] rounded-sm overflow-hidden text-[#222] text-lg">
                   <button
-                    onClick={() => handleQuantityChange(item.id, item.productId, -1)}
+                    onClick={() =>
+                      handleQuantityChange(item.id, item.productId, -1)
+                    }
                     className="w-10 h-10 bg-[#f0f0f0] hover:bg-[#e0e0e0] flex items-center justify-center"
                   >
                     −
@@ -218,7 +241,9 @@ export default function CartPage() {
                     {item.quantity}
                   </div>
                   <button
-                    onClick={() => handleQuantityChange(item.id, item.productId, +1)}
+                    onClick={() =>
+                      handleQuantityChange(item.id, item.productId, +1)
+                    }
                     className="w-10 h-10 bg-[#f0f0f0] hover:bg-[#e0e0e0] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                     disabled={item.quantity >= maxAllowed}
                   >
@@ -236,10 +261,13 @@ export default function CartPage() {
 
               {/* 小計 */}
               <div className="text-center font-bold text-[#222] md:block hidden">
-                {(item.subtotal ?? item.price * item.quantity).toLocaleString()}yen (Tax inc.)
+                {(item.subtotal ?? item.price * item.quantity).toLocaleString()}
+                yen (Tax inc.)
               </div>
               <div className="text-right font-bold text-[#222] md:hidden block">
-                小計：{(item.subtotal ?? item.price * item.quantity).toLocaleString()}yen (Tax inc.)
+                小計：
+                {(item.subtotal ?? item.price * item.quantity).toLocaleString()}
+                yen (Tax inc.)
               </div>
             </div>
           );
@@ -254,18 +282,34 @@ export default function CartPage() {
         </div>
 
         {/* アクション */}
-        <div className="grid grid-cols-2 gap-4 mt-8">
+        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <button
-            className="border border-[#222] py-4 text-lg font-bold flex items-center justify-center gap-2 hover:opacity-50 transition-opacity duration-300 ease-in-out hover:cursor-pointer"
+            type="button"
+            aria-label="お買い物を続ける"
+            className="w-full border border-[#222] bg-white py-3 md:py-4 text-base md:text-lg font-bold
+               flex items-center justify-center gap-2
+               hover:bg-gray-50
+               transition-[opacity,background-color] duration-200
+               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
             onClick={() => router.push("/products")}
           >
-            <span className="text-2xl">◀</span> お買い物を続ける
+            <span className="text-xl md:text-2xl">◀</span>
+            <span>お買い物を続ける</span>
           </button>
+
           <button
-            className="bg-[#000] text-white py-4 text-lg font-bold flex items-center justify-center gap-2 hover:opacity-50 transition-opacity duration-300 ease-in-out hover:cursor-pointer"
+            type="button"
+            aria-label="レジに進む"
+            className="w-full bg-black text-white py-3 md:py-4 text-base md:text-lg font-bold
+               flex items-center justify-center gap-2
+               hover:opacity-80
+               transition-opacity duration-200
+               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black
+               disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleToConfirm}
           >
-            レジに進む <span className="text-2xl">▶</span>
+            <span>レジに進む</span>
+            <span className="text-xl md:text-2xl">▶</span>
           </button>
         </div>
       </section>

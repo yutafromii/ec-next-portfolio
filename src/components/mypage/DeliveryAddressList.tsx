@@ -173,14 +173,6 @@ export default function DeliveryAddressList() {
             >
               変更
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="rounded-none w-20"
-              onClick={() => onDelete(a.id)}
-            >
-              削除
-            </Button>
           </div>
         </div>
       ))}
