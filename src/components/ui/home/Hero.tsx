@@ -45,7 +45,7 @@ export default function Hero() {
       >
         <div className="relative w-full h-full overflow-hidden">
           <Image
-            src="/images/haerin.jpg"
+            src="/images/main-image.png"
             alt="Hero Scroll Expand"
             fill
             className="object-cover object-center"
